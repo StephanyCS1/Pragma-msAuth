@@ -1,0 +1,63 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: "autenticacion"
+  devtools:
+    add-properties: false
+  profiles:
+    include: null
+
+adapters:
+  r2dbc:
+    host: localhost
+    port: 5432
+    database: crediya
+    schema: public
+    username: postgres
+    password: tefis123
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,prometheus"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+cors:
+  allowed-origins: "http://localhost:4200,http://localhost:8080"
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operationsSorter: method
+    tagsSorter: alpha
+    try-it-out-enabled: true
+    filter: true
+    display-request-duration: true
+  show-actuator: false
+  use-management-port: false
+  group-configs:
+    - group: 'usuarios'
+      display-name: 'API de Usuarios'
+      paths-to-match: '/api/v1/usuarios/**'
+logging:
+  level:
+    # 👇 Tus clases de negocio (usa INFO en prod, DEBUG en dev)
+    co.com.crediya: DEBUG
+
+    # 👇 WebFlux: rutas, handlers, body read/write
+    org.springframework.web.reactive.function.server: DEBUG
+    org.springframework.http.codec: DEBUG
+
+    # 👇 Spring Data R2DBC (queries SQL y mapeo)
+    org.springframework.data.r2dbc: DEBUG
+    org.springframework.r2dbc.core: DEBUG
+
+    # 👇 Infra general de Spring (mantén INFO para no saturar)
+    org.springframework: INFO
+    reactor.netty.http.client: INFO
