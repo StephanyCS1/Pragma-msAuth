@@ -1,18 +1,26 @@
 package co.com.crediya.model.user.exceptions;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class DomainValidationException extends RuntimeException {
     private final List<String> errors;
 
     public DomainValidationException(String message) {
         super(message);
-        this.errors = List.of(message);
+        this.errors = message == null ?
+                Collections.singletonList(null) :
+                Collections.singletonList(message);
     }
 
     public DomainValidationException(List<String> errors) {
-        super(String.join("; ", errors));
-        this.errors = List.copyOf(errors);
+        super(String.join("; ", errors.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList())));
+        this.errors = Collections.unmodifiableList(new ArrayList<>(errors));
     }
 
     public List<String> getErrors() {

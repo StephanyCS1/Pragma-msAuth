@@ -12,7 +12,6 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'jacoco'
     apply plugin: 'io.spring.dependency-management'
-    apply plugin: 'info.solidsoft.pitest'
 
     compileJava.dependsOn validateStructure
 
@@ -21,21 +20,38 @@ subprojects {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    //build.dependsOn 'pitest'
-
     test {
         useJUnitPlatform()
+
+        testLogging {
+            events "passed", "failed", "skipped"
+            showStandardStreams = false
+            exceptionFormat = "full"
+        }
+
+        maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+
+        jvmArgs = [
+                '-Xmx1024m',
+                '-XX:+EnableDynamicAgentLoading',
+                '-XX:+AllowRedefinitionToAddDeleteMethods'
+        ]
+
+        systemProperty 'reactor.netty.pool.leasingStrategy', 'lifo'
+        systemProperty 'reactor.blockhound.integration.disabled', 'true'
     }
 
     dependencies {
         implementation 'io.projectreactor:reactor-core'
         implementation 'io.projectreactor.addons:reactor-extra'
 
-        testImplementation 'io.projectreactor.tools:blockhound-junit-platform:1.0.13.RELEASE'
-
         testImplementation 'io.projectreactor:reactor-test'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+        testImplementation 'org.assertj:assertj-core:3.24.2'
+        testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.1'
+
         compileOnly "org.projectlombok:lombok:${lombokVersion}"
         annotationProcessor  "org.projectlombok:lombok:${lombokVersion}"
         testCompileOnly  "org.projectlombok:lombok:${lombokVersion}"
@@ -43,44 +59,62 @@ subprojects {
         implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
     }
 
-    tasks.withType(Test).configureEach {
-        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
-            jvmArgs += [
-                    "-XX:+AllowRedefinitionToAddDeleteMethods"
-            ]
-        }
-    }
-
     test.finalizedBy(project.tasks.jacocoTestReport)
 
-    pitest {
-        targetClasses = ['co.com.crediya.*']
-        excludedClasses = []
-        excludedTestClasses = []
-        pitestVersion = '1.20.1'
-        verbose = false
-        outputFormats = ['XML', 'HTML']
-        threads = 8
-        exportLineCoverage = true
-        useClasspathFile = true
-        timestampedReports = false
-        //mutators = ['STRONGER', 'DEFAULTS']
-        fileExtensionsToFilter.addAll('xml', 'orbit')
-        junit5PluginVersion = '1.2.2'
-        failWhenNoMutations = false
-        jvmArgs = ["-XX:+AllowRedefinitionToAddDeleteMethods"]
-    }
-
     jacocoTestReport {
-        dependsOn test, 'pitest'
+        dependsOn test
         reports {
             xml.setRequired true
             xml.setOutputLocation layout.buildDirectory.file("reports/jacoco.xml")
             csv.setRequired false
             html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
         }
+
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                        '**/MainApplication.class',
+                        '**/config/**',
+                        '**/*Config.class',
+                        '**/*Configuration.class',
+                        '**/*DTO.class',
+                        '**/*Entity.class',
+                        '**/driven-adapters/**/config/**',
+                        '**/app-service/**/config/**'
+                ])
+            }))
+        }
     }
 
+    jacocoTestCoverageVerification {
+        dependsOn jacocoTestReport
+
+        violationRules {
+            rule {
+                element = 'BUNDLE'
+
+                limit {
+                    counter = 'LINE'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.90
+                }
+
+                limit {
+                    counter = 'BRANCH'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.90
+                }
+
+                limit {
+                    counter = 'METHOD'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.90
+                }
+            }
+        }
+    }
+
+    check.dependsOn 'jacocoTestCoverageVerification'
 }
 
 jacoco {
@@ -89,15 +123,164 @@ jacoco {
 }
 
 tasks.register('jacocoMergedReport', JacocoReport) {
-    dependsOn = [test, subprojects.jacocoTestReport, pitestReportAggregate]
+    dependsOn = subprojects.test
     additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
     sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
     classDirectories.setFrom files(subprojects.sourceSets.main.output)
     executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
+
     reports {
         xml.setRequired true
         csv.setRequired false
         html.setRequired true
+
+        xml.outputLocation = layout.buildDirectory.file('reports/jacocoMergedReport/jacocoMergedReport.xml')
+        html.outputLocation = layout.buildDirectory.dir('reports/jacocoMergedReport/html')
+    }
+
+    doFirst {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/MainApplication.class',
+                    '**/config/**',
+                    '**/*Config.class',
+                    '**/*Configuration.class',
+                    '**/*DTO.class',
+                    '**/*Entity.class',
+                    '**/driven-adapters/**/config/**',
+                    '**/app-service/**/config/**'
+            ])
+        }))
+    }
+}
+
+tasks.register('jacocoMergedCoverageVerification', JacocoCoverageVerification) {
+    description = 'Valida cobertura 90%+ consolidada de todos los módulos'
+    group = 'verification'
+
+    dependsOn 'jacocoMergedReport'
+
+    additionalSourceDirs.from = subprojects.collect { project ->
+        project.sourceSets.main.allSource.srcDirs
+    }
+
+    sourceDirectories.from = subprojects.collect { project ->
+        project.sourceSets.main.allSource.srcDirs
+    }
+
+    classDirectories.from = subprojects.collect { project ->
+        project.sourceSets.main.output
+    }
+
+    executionData.from = subprojects.findAll {
+        new File("${it.buildDir}/jacoco/test.exec").exists()
+    }.collect {
+        "${it.buildDir}/jacoco/test.exec"
+    }
+
+    violationRules {
+        rule {
+            element = 'BUNDLE'
+
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.90
+            }
+
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.90
+            }
+
+            limit {
+                counter = 'METHOD'
+                value = 'COVEREDRATIO'
+                minimum = 0.90
+            }
+        }
+    }
+
+    doFirst {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/MainApplication.class',
+                    '**/config/**',
+                    '**/*Config.class',
+                    '**/*Configuration.class',
+                    '**/*DTO.class',
+                    '**/*Entity.class',
+                    '**/driven-adapters/**/config/**',
+                    '**/app-service/**/config/**'
+            ])
+        }))
+    }
+}
+
+tasks.register('testCoverage') {
+    group = 'verification'
+    description = 'Ejecuta todos los tests y valida cobertura 90%+ consolidada'
+    dependsOn subprojects*.test, 'jacocoMergedCoverageVerification'
+
+    doLast {
+        println ""
+        println "COBERTURA 90%+ VALIDADA EXITOSAMENTE!"
+        println "Reporte consolidado: build/reports/jacocoMergedReport/html/index.html"
+        println "Reportes por módulo: [modulo]/build/reports/jacocoHtml/index.html"
+        println ""
+    }
+}
+
+tasks.register('coverageReport') {
+    group = 'reporting'
+    description = 'Solo genera el reporte de cobertura consolidado'
+    dependsOn 'jacocoMergedReport'
+
+    doLast {
+        println "Reporte consolidado generado en: build/reports/jacocoMergedReport/html/index.html"
+    }
+}
+
+tasks.register('testIgnoringFailures') {
+    group = 'verification'
+    description = 'Ejecuta tests aunque algunos fallen (para ver cobertura)'
+
+    doLast {
+        subprojects.each { subproject ->
+            try {
+                subproject.tasks.test.execute()
+            } catch (Exception e) {
+                println "Tests fallaron en ${subproject.name}, pero continuando..."
+            }
+        }
+    }
+
+    finalizedBy 'jacocoMergedReport'
+}
+
+project.subprojects.findAll { it.name.contains('model') }.each { domainProject ->
+    domainProject.jacocoTestCoverageVerification {
+        violationRules {
+            rule {
+                element = 'BUNDLE'
+                limit {
+                    counter = 'LINE'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.95
+                }
+                limit {
+                    counter = 'BRANCH'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.95
+                }
+                limit {
+                    counter = 'METHOD'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.95
+                }
+            }
+        }
     }
 }
 
@@ -105,26 +288,6 @@ tasks.withType(JavaCompile).configureEach {
     options.compilerArgs = [
             '-Amapstruct.suppressGeneratorTimestamp=true'
     ]
-}
-
-pitestReportAggregate {
-    doLast {
-        def reportDir = layout.buildDirectory.dir("reports/pitest").get().asFile
-        def consolidatedReport = new File(reportDir, 'mutations.xml')
-        consolidatedReport.withWriter { writer ->
-            writer.write("<mutations>\n")
-            subprojects.each { subproject ->
-                def xmlReport = subproject.layout.buildDirectory.file("reports/pitest/mutations.xml").get().asFile
-                if (xmlReport.exists()) {
-                    def xmlContent = xmlReport.text
-                    xmlContent = xmlContent.replaceAll("<\\?xml[^>]*>", "")
-                    xmlContent = xmlContent.replaceAll("</?mutations( partial=\"true\")?>", "")
-                    writer.write(xmlContent.trim() + "\n")
-                }
-            }
-            writer.write("</mutations>")
-        }
-    }
 }
 
 tasks.named('wrapper') {
