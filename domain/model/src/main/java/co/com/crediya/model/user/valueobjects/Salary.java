@@ -18,7 +18,6 @@ public record Salary(BigDecimal amount) {
     }
 
     public static void validate(BigDecimal amount, ValidationResult vr) {
-        if (amount == null) { vr.addError("El salario es obligatorio"); return; }
         if (amount.compareTo(MIN) < 0 || amount.compareTo(MAX) > 0) {
             vr.addError("El salario debe estar entre 0 y 15000000");
         }

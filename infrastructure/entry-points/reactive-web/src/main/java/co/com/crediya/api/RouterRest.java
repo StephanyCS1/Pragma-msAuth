@@ -1,5 +1,7 @@
 package co.com.crediya.api;
 
+import co.com.crediya.api.dto.CreateUserRequest;
+import co.com.crediya.api.dto.EditUserRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -187,12 +189,20 @@ public class RouterRest {
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
         final String USERS = API_V1_USUARIOS;
 
-        return RouterFunctions
-                .route(POST(USERS).and(accept(MediaType.APPLICATION_JSON)), handler::createUser)
-                .andRoute(GET(USERS).and(queryParam("email", email -> !email.isBlank())), handler::getUserByEmail)
-                .andRoute(GET(USERS), req -> handler.getAllUsers())
-                .andRoute(PUT(USERS + "/{id}").and(accept(MediaType.APPLICATION_JSON)), handler::updateUser)
-                .andRoute(PUT(USERS + "/email/{email}").and(accept(MediaType.APPLICATION_JSON)), handler::updateUserByEmail)
-                .andRoute(DELETE(USERS + "/email/{email}"), handler::deleteUser);
+        return RouterFunctions.route(POST(USERS).and(accept(MediaType.APPLICATION_JSON)),
+                request -> request.bodyToMono(CreateUserRequest.class)
+                        .flatMap(handler::createUser))
+                .andRoute(GET(USERS).and(queryParam("email", email -> true)),
+                        request -> handler.getUserByEmail(request.queryParam("email").orElse("")))
+                .andRoute(GET(USERS),
+                        request -> handler.getAllUsers())
+                .andRoute(PUT(USERS + "/{id}").and(accept(MediaType.APPLICATION_JSON)),
+                        request -> request.bodyToMono(EditUserRequest.class)
+                                .flatMap(body -> handler.updateUser(request.pathVariable("id"), body)))
+                .andRoute(PUT(USERS + "/email/{email}").and(accept(MediaType.APPLICATION_JSON)),
+                        request -> request.bodyToMono(EditUserRequest.class)
+                                .flatMap(body -> handler.updateUserByEmail(request.pathVariable("email"), body)))
+                .andRoute(DELETE(USERS + "/email/{email}"),
+                        request -> handler.deleteUser(request.pathVariable("email")));
     }
 }

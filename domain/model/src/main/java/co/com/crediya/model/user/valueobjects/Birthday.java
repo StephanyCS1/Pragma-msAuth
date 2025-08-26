@@ -10,25 +10,13 @@ public record Birthday(LocalDate value) {
 
     public Birthday {
         ValidationResult vr = new ValidationResult();
-        validate(value, vr);
 
         if (vr.hasErrors()) {
             throw new DomainValidationException(String.join("; ", vr.getErrors()));
         }
     }
 
-    public static void validate(LocalDate value, ValidationResult vr) {
-        if (value == null) {
-            vr.addError("La fecha de nacimiento es obligatoria");
-            return;
-        }
-        if (value.isAfter(LocalDate.now())) {
-            vr.addError("La fecha debe ser pasada");
-        }
-        if (value.isBefore(LocalDate.now().minusYears(120))) {
-            vr.addError("La fecha debe ser mayor o igual a " + LocalDate.now().minusYears(120));
-        }
-    }
+
 
     public static Birthday of(String isoDate) {
         try {
