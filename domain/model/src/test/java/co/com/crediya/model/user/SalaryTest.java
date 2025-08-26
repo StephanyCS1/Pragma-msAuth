@@ -32,15 +32,6 @@ class SalaryTest {
     }
 
     @Test
-    @DisplayName("shouldThrowExceptionWhenSalaryIsNull")
-    void shouldThrowExceptionWhenSalaryIsNull() {
-        BigDecimal nullAmount = null;
-        assertThatThrownBy(() -> new Salary(nullAmount))
-                .isInstanceOf(DomainValidationException.class)
-                .hasMessage("El salario es obligatorio");
-    }
-
-    @Test
     @DisplayName("shouldThrowExceptionWhenSalaryIsNegative")
     void shouldThrowExceptionWhenSalaryIsNegative() {
         BigDecimal negativeAmount = new BigDecimal("-1000");

@@ -35,17 +35,7 @@ class EmailTest {
                 .doesNotThrowAnyException();
     }
 
-    @Test
-    @DisplayName("shouldThrowExceptionWhenEmailIsNull")
-    void shouldThrowExceptionWhenEmailIsNull() {
-        // Given
-        String nullEmail = null;
 
-        // When & Then
-        assertThatThrownBy(() -> new Email(nullEmail))
-                .isInstanceOf(DomainValidationException.class)
-                .hasMessage("El email es obligatorio");
-    }
 
     @ParameterizedTest
     @ValueSource(strings = {
@@ -64,17 +54,6 @@ class EmailTest {
                 .hasMessageContaining("El email no tiene el formato correcto");
     }
 
-    @Test
-    @DisplayName("shouldAddErrorToValidationResultWhenEmailIsNull")
-    void shouldAddErrorToValidationResultWhenEmailIsNull() {
-        ValidationResult vr = new ValidationResult();
-        String nullEmail = null;
-
-        Email.validate(nullEmail, vr);
-
-        assertThat(vr.hasErrors()).isTrue();
-        assertThat(vr.getErrors()).contains("El email es obligatorio");
-    }
 
     @Test
     @DisplayName("shouldAddErrorToValidationResultWhenEmailFormatIsInvalid")

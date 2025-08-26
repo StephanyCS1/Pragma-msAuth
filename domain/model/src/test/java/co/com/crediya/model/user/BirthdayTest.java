@@ -43,8 +43,9 @@ class BirthdayTest {
         LocalDate futureDate = LocalDate.now().plusDays(1);
         assertThatThrownBy(() -> new Birthday(futureDate))
                 .isInstanceOf(DomainValidationException.class)
-                .hasMessage("La fecha debe ser pasada");
+                .hasMessage("La fecha de nacimiento no puede ser futura");
     }
+
 
     @Test
     @DisplayName("shouldThrowExceptionWhenBirthdayIsTooOld")
@@ -52,7 +53,7 @@ class BirthdayTest {
         LocalDate tooOldDate = LocalDate.now().minusYears(121);
         assertThatThrownBy(() -> new Birthday(tooOldDate))
                 .isInstanceOf(DomainValidationException.class)
-                .hasMessageContaining("La fecha debe ser mayor o igual a");
+                .hasMessageContaining("no puede ser anterior a");
     }
 
     @Test
@@ -80,5 +81,34 @@ class BirthdayTest {
 
         assertThatCode(() -> new Birthday(today))
                 .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("shouldThrowExceptionWhenMultipleValidationErrors")
+    void shouldThrowExceptionWhenMultipleValidationErrors() {
+        LocalDate futureAndOldDate = LocalDate.now().plusYears(1);
+        assertThatThrownBy(() -> new Birthday(futureAndOldDate))
+                .isInstanceOf(DomainValidationException.class);
+    }
+
+    @Test
+    @DisplayName("shouldAcceptBirthdayExactlyOnBoundaryDates")
+    void shouldAcceptBirthdayExactlyOnBoundaryDates() {
+        LocalDate exactly120Years = LocalDate.now().minusYears(120);
+        assertThatCode(() -> new Birthday(exactly120Years))
+                .doesNotThrowAnyException();
+
+        LocalDate today = LocalDate.now();
+        assertThatCode(() -> new Birthday(today))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("shouldThrowExceptionWhenOfMethodReceivesInvalidDate")
+    void shouldThrowExceptionWhenOfMethodReceivesInvalidDate() {
+        String invalidDate = "2025-13-50"; // Mes y día inválidos
+        assertThatThrownBy(() -> Birthday.of(invalidDate))
+                .isInstanceOf(DomainValidationException.class)
+                .hasMessage("Formato de fecha inválido, use yyyy-MM-dd");
     }
 }
