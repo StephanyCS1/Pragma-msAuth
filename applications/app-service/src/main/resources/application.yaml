@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 9001
 spring:
   application:
     name: "autenticacion"
@@ -29,7 +29,7 @@ cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
     enabled: true
   swagger-ui:
     path: /swagger-ui.html
@@ -45,19 +45,22 @@ springdoc:
     - group: 'usuarios'
       display-name: 'API de Usuarios'
       paths-to-match: '/api/v1/usuarios/**'
+    - group: 'auth'
+      display-name: 'API de Autenticación'
+      paths-to-match: '/api/v1/login'
+security:
+  jwt:
+    issuer: "crediya-auth"
+    audience: "crediya-services"
+    secret: "${JWT_SECRET}" # HS256
+    expiration-minutes: 3
+
 logging:
   level:
-    # 👇 Tus clases de negocio (usa INFO en prod, DEBUG en dev)
     co.com.crediya: DEBUG
-
-    # 👇 WebFlux: rutas, handlers, body read/write
     org.springframework.web.reactive.function.server: DEBUG
     org.springframework.http.codec: DEBUG
-
-    # 👇 Spring Data R2DBC (queries SQL y mapeo)
     org.springframework.data.r2dbc: DEBUG
     org.springframework.r2dbc.core: DEBUG
-
-    # 👇 Infra general de Spring (mantén INFO para no saturar)
     org.springframework: INFO
     reactor.netty.http.client: INFO

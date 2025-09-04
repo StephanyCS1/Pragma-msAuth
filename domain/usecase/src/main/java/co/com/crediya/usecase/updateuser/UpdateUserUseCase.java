@@ -6,7 +6,6 @@ import co.com.crediya.model.user.exceptions.DomainValidationException;
 import co.com.crediya.model.user.gateways.UserRepository;
 import co.com.crediya.model.user.valueobjects.EditUserCommand;
 import co.com.crediya.model.user.valueobjects.Email;
-import co.com.crediya.model.user.valueobjects.Salary;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -29,7 +28,8 @@ public class UpdateUserUseCase {
                     User updated = existing.withAddressEmailSalary(
                             editUserCommand.address(),
                             editUserCommand.email(),
-                            editUserCommand.baseSalary()
+                            editUserCommand.baseSalary(),
+                            existing.getIdentification()
                     );
                     return userRepository.saveUser(updated);
                 });
@@ -47,7 +47,8 @@ public class UpdateUserUseCase {
                     User updated = existing.withAddressEmailSalary(
                             editUserCommand.address(),
                             editUserCommand.email(),
-                            editUserCommand.baseSalary()
+                            editUserCommand.baseSalary(),
+                            existing.getIdentification()
                     );
                     return userRepository.saveUser(updated);
                 });

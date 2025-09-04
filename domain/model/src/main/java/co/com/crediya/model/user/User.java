@@ -20,14 +20,17 @@ public class User {
     private String address;
     private Email email;
     private Salary baseSalary;
+    private String identification;
+    private String password;
+    private UUID rol;
 
 
     public static User create(UUID id, String name, String lastName, Birthday birthday,
-                              String address, Email email, Salary baseSalary) {
-        return new User(id,name, lastName, birthday, address, email, baseSalary);
+                              String address, Email email, Salary baseSalary, String identification, String password, UUID rol) {
+        return new User(id,name, lastName, birthday, address, email, baseSalary, identification, password, rol);
     }
 
-    public User withAddressEmailSalary(String newAddress, Email newEmail, Salary newSalary) {
+    public User withAddressEmailSalary(String newAddress, Email newEmail, Salary newSalary, String identification) {
         return new User(
                 this.id,
                 this.name,
@@ -35,7 +38,10 @@ public class User {
                 this.birthday,
                 newAddress,
                 newEmail,
-                newSalary
+                newSalary,
+                identification,
+                password,
+                rol
         );
     }
 }

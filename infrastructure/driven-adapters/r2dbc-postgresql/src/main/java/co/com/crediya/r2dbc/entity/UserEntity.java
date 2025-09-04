@@ -38,4 +38,16 @@ public class UserEntity {
 
     @Column("base_salary")
     private BigDecimal baseSalary;
+
+    @Column("identification")
+    private String identification;
+
+    @Column("password")
+    private String password;
+
+    @Column("rol")
+    private UUID rol;
+
+
+
 }

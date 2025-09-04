@@ -37,20 +37,19 @@ public class GlobalExceptionHandler implements WebExceptionHandler {
             return Mono.error(ex);
         }
 
-        response.getHeaders().add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
         GeneralResponse<Object> errorResponse;
         HttpStatus status;
 
-        if (ex instanceof DomainValidationException) {
-            DomainValidationException domainEx = (DomainValidationException) ex;
+        if (ex instanceof DomainValidationException domainEx) {
             status = HttpStatus.BAD_REQUEST;
             errorResponse = new GeneralResponse<>(
                     status.value(),
                     null,
-                    domainEx.getErrors()
+                    domainEx.getMessage() 
             );
-            log.warn("Error de validación de dominio: {}", domainEx.getErrors());
+            log.warn("Error de validación de dominio: {}", domainEx.getMessage());
 
         } else if (ex instanceof DecodingException) {
             status = HttpStatus.BAD_REQUEST;
@@ -62,17 +61,16 @@ public class GlobalExceptionHandler implements WebExceptionHandler {
             errorResponse = new GeneralResponse<>(
                     status.value(),
                     null,
-                    msg
+                    msg 
             );
             log.warn("Error de decodificación JSON: {}", ex.getMessage());
 
-        } else if (ex instanceof ServerWebInputException) {
-            ServerWebInputException inputEx = (ServerWebInputException) ex;
+        } else if (ex instanceof ServerWebInputException inputEx) {
             status = HttpStatus.BAD_REQUEST;
             errorResponse = new GeneralResponse<>(
                     status.value(),
                     null,
-                    inputEx.getReason()
+                    inputEx.getReason() 
             );
             log.warn("Error de entrada web: {}", inputEx.getReason());
 
@@ -85,14 +83,15 @@ public class GlobalExceptionHandler implements WebExceptionHandler {
             );
             log.warn("UUID inválido: {}", ex.getMessage());
 
-        }else if (ex instanceof UserNotFoundException) {
+        } else if (ex instanceof UserNotFoundException) {
             status = HttpStatus.NOT_FOUND;
             errorResponse = new GeneralResponse<>(
                     status.value(),
                     null,
-                    ex.getMessage()
+                    ex.getMessage() 
             );
             log.warn("Usuario no encontrado: {}", ex.getMessage());
+
         } else {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
             errorResponse = new GeneralResponse<>(

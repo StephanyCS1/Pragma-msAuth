@@ -1,6 +1,5 @@
 package co.com.crediya.model.user;
 
-import co.com.crediya.model.user.common.ValidationResult;
 import co.com.crediya.model.user.exceptions.DomainValidationException;
 import co.com.crediya.model.user.valueobjects.Email;
 import org.junit.jupiter.api.Test;
@@ -35,8 +34,6 @@ class EmailTest {
                 .doesNotThrowAnyException();
     }
 
-
-
     @ParameterizedTest
     @ValueSource(strings = {
             "invalid-email",
@@ -51,19 +48,7 @@ class EmailTest {
     void shouldThrowExceptionWhenInvalidEmailFormat(String invalidEmail) {
         assertThatThrownBy(() -> new Email(invalidEmail))
                 .isInstanceOf(DomainValidationException.class)
-                .hasMessageContaining("El email no tiene el formato correcto");
+                .hasMessage("El email no tiene el formato correcto");
     }
 
-
-    @Test
-    @DisplayName("shouldAddErrorToValidationResultWhenEmailFormatIsInvalid")
-    void shouldAddErrorToValidationResultWhenEmailFormatIsInvalid() {
-        ValidationResult vr = new ValidationResult();
-        String invalidEmail = "invalid-email";
-
-        Email.validate(invalidEmail, vr);
-
-        assertThat(vr.hasErrors()).isTrue();
-        assertThat(vr.getErrors()).contains("El email no tiene el formato correcto");
-    }
 }

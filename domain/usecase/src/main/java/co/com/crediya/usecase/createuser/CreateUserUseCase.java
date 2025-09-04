@@ -2,16 +2,21 @@ package co.com.crediya.usecase.createuser;
 
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.common.ValidationResult;
+import co.com.crediya.model.user.enums.RolName;
 import co.com.crediya.model.user.exceptions.DomainValidationException;
+import co.com.crediya.model.user.gateways.PasswordEncodePort;
 import co.com.crediya.model.user.gateways.UserRepository;
 import co.com.crediya.model.user.valueobjects.CreateUserCommand;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @RequiredArgsConstructor
 public class CreateUserUseCase {
 
     private final UserRepository userRepository;
+    private final PasswordEncodePort passwordEncoder;
 
     public Mono<User> createUser(CreateUserCommand createUserCommand) {
 
@@ -30,6 +35,10 @@ public class CreateUserUseCase {
     }
 
     private Mono<User> createAndSaveUser(CreateUserCommand command) {
+        UUID rolId = RolName.fromRol(command.rol())
+                .map(RolName::getId)
+                .orElseThrow(() -> new DomainValidationException("Rol inválido: " + command.rol()));
+        var hashed = passwordEncoder.encode(command.password());
         User user = User.create(
                 null,
                 command.name(),
@@ -37,9 +46,12 @@ public class CreateUserUseCase {
                 command.birthday(),
                 command.address(),
                 command.email(),
-                command.baseSalary()
+                command.baseSalary(),
+                command.identification(),
+                hashed,
+                rolId
         );
-        System.out.println("Creating user "+ user.toString());
+
         return userRepository.saveUser(user);
     }
 

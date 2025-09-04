@@ -2,6 +2,7 @@ package co.com.crediya.usecase.getuserbyid;
 
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.exceptions.DomainValidationException;
+import co.com.crediya.model.user.exceptions.UserNotFoundException;
 import co.com.crediya.model.user.gateways.UserRepository;
 import co.com.crediya.model.user.valueobjects.Email;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,7 @@ public class GetUserQueryUseCase {
     public Mono<User> findUserByEmail(String email) {
         Email mail = new Email(email);
         return userRepository.findByEmail(mail)
-                .switchIfEmpty(Mono.error(new DomainValidationException("El email no existe.")));
+                .switchIfEmpty(Mono.error(new UserNotFoundException("El email no existe.")));
     }
 
     public Flux<User> findAllUsers() {

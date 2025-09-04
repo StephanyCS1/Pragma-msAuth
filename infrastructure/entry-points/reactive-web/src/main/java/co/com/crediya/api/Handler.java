@@ -4,7 +4,6 @@ import co.com.crediya.api.dto.CreateUserRequest;
 import co.com.crediya.api.dto.EditUserRequest;
 import co.com.crediya.api.dto.GeneralResponse;
 import co.com.crediya.api.mapper.UserMapper;
-import co.com.crediya.model.user.exceptions.DomainValidationException;
 import co.com.crediya.model.user.exceptions.UserNotFoundException;
 import co.com.crediya.model.user.valueobjects.Email;
 import co.com.crediya.usecase.createuser.CreateUserUseCase;
@@ -16,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 

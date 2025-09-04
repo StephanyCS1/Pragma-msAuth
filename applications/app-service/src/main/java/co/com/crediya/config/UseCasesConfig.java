@@ -1,5 +1,6 @@
 package co.com.crediya.config;
 
+import co.com.crediya.model.user.gateways.PasswordEncodePort;
 import co.com.crediya.model.user.gateways.UserRepository;
 import co.com.crediya.usecase.createuser.CreateUserUseCase;
 import co.com.crediya.usecase.deleteuser.DeleteUserUseCase;
@@ -12,10 +13,10 @@ import org.springframework.context.annotation.Configuration;
 public class UseCasesConfig {
 
     @Bean
-    CreateUserUseCase createUserUseCase(UserRepository userRepository) {
-        return new CreateUserUseCase(userRepository);
+    public CreateUserUseCase createUserUseCase(UserRepository userRepository,
+                                               PasswordEncodePort passwordEncoderPort) {
+        return new CreateUserUseCase(userRepository, passwordEncoderPort);
     }
-
     @Bean
     DeleteUserUseCase deleteUserUseCase(UserRepository userRepository) {
         return new DeleteUserUseCase(userRepository);

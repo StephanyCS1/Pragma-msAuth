@@ -96,6 +96,9 @@ public class UserReactiveRepositoryAdapter extends UserReactiveAdapterOperations
         e.setAddress(user.getAddress());
         e.setEmail(user.getEmail().value());
         e.setBaseSalary(user.getBaseSalary().amount());
+        e.setIdentification(user.getIdentification());
+        e.setPassword(user.getPassword());
+        e.setRol(user.getRol());
         return e;
     }
 
@@ -107,7 +110,10 @@ public class UserReactiveRepositoryAdapter extends UserReactiveAdapterOperations
                 new co.com.crediya.model.user.valueobjects.Birthday(e.getBirthday()),
                 e.getAddress(),
                 new co.com.crediya.model.user.valueobjects.Email(e.getEmail()),
-                new co.com.crediya.model.user.valueobjects.Salary(e.getBaseSalary())
+                new co.com.crediya.model.user.valueobjects.Salary(e.getBaseSalary()),
+                e.getIdentification(),
+                e.getPassword(),
+                e.getRol()
         );
     }
 }

@@ -26,7 +26,16 @@ public record CreateUserRequest(
 
         @NotNull(message = "El salario es requerido")
         @Positive(message = "El salario debe ser mayor a 0")
-        BigDecimal baseSalary
+        BigDecimal baseSalary,
+
+        @NotBlank(message = "La identificacion es requerida")
+        String identification,
+
+        @NotBlank(message = "La contraseña es requerida")
+        String password,
+
+        @NotBlank(message = "El rol es requerido")
+        String rol
 ) {
 
 }
