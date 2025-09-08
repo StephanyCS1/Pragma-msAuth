@@ -7,5 +7,8 @@ public record UserDto(String name,
                       String birthday,
                       String address,
                       String email,
-                      BigDecimal baseSalary){
+                      BigDecimal baseSalary,
+                      String identification,
+                      String password,
+                      String rol){
 }

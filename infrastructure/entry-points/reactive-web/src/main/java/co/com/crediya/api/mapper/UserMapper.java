@@ -6,9 +6,6 @@ import co.com.crediya.api.dto.UserResponse;
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.valueobjects.CreateUserCommand;
 import co.com.crediya.model.user.valueobjects.EditUserCommand;
-import co.com.crediya.model.user.valueobjects.Birthday;
-import co.com.crediya.model.user.valueobjects.Email;
-import co.com.crediya.model.user.valueobjects.Salary;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

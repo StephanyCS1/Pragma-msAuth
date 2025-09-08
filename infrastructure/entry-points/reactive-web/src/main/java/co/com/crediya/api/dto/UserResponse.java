@@ -10,6 +10,8 @@ public record UserResponse(
         LocalDate birthday,
         String address,
         String email,
-        BigDecimal baseSalary
+        BigDecimal baseSalary,
+        String identification,
+        String rol
 ) {
 }

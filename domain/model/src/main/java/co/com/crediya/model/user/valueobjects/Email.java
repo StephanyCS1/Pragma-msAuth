@@ -1,6 +1,5 @@
 package co.com.crediya.model.user.valueobjects;
 
-import co.com.crediya.model.user.common.ValidationResult;
 import co.com.crediya.model.user.exceptions.DomainValidationException;
 
 import java.util.regex.Pattern;
@@ -12,18 +11,13 @@ public record Email(String value) {
             Pattern.CASE_INSENSITIVE
     );
     public Email {
-        ValidationResult vr = new  ValidationResult();
-        validate(value, vr);
-
-        if (vr.hasErrors()) {
-            throw new DomainValidationException(String.join("; ", vr.getErrors()));
-        }
+        validate(value);
     }
 
-    public static void validate(String email, ValidationResult vr) {
+    public static void validate(String email) {
 
         if (!emailRegex.matcher(email).matches()) {
-            vr.addError("El email no tiene el formato correcto");
+            throw new DomainValidationException("El email no tiene el formato correcto");
         }
     }
 
