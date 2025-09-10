@@ -39,7 +39,8 @@ class CreateUserUseCaseTest {
                 "Calle 123 #45-67",
                 new Birthday(LocalDate.of(1990, 5, 15)),
                 new Email("juan.perez@example.com"),
-                new Salary(new BigDecimal("3000000"))
+                new Salary(new BigDecimal("3000000")),
+                "123456789"
         );
     }
 
@@ -50,7 +51,7 @@ class CreateUserUseCaseTest {
                 new Birthday(LocalDate.of(1990, 5, 15)),
                 "Calle 123 #45-67",
                 new Email("juan.perez@example.com"),
-                new Salary(new BigDecimal("3000000")));
+                new Salary(new BigDecimal("3000000")), "123456789");
 
         when(userRepository.existsByEmail(eq(validCommand.email()))).thenReturn(Mono.just(false));
         when(userRepository.saveUser(any(User.class))).thenReturn(Mono.just(expectedUser));

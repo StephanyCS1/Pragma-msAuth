@@ -41,7 +41,8 @@ class UpdateUserUseCaseTest {
                 new Birthday(LocalDate.of(1990, 5, 15)),
                 "Calle 123 #45-67",
                 new Email("juan.perez@example.com"),
-                new Salary(new BigDecimal("3000000"))
+                new Salary(new BigDecimal("3000000")),
+                "123456789"
         );
 
         validEditCommand = new EditUserCommand(
@@ -59,7 +60,8 @@ class UpdateUserUseCaseTest {
         User updatedUser = existingUser.withAddressEmailSalary(
                 validEditCommand.address(),
                 validEditCommand.email(),
-                validEditCommand.baseSalary()
+                validEditCommand.baseSalary(),
+                existingUser.getIdentification()
         );
 
         when(userRepository.findById(userId)).thenReturn(Mono.just(existingUser));
@@ -91,7 +93,8 @@ class UpdateUserUseCaseTest {
         User updatedUser = existingUser.withAddressEmailSalary(
                 validEditCommand.address(),
                 validEditCommand.email(),
-                validEditCommand.baseSalary()
+                validEditCommand.baseSalary(),
+                existingUser.getIdentification()
         );
 
         when(userRepository.findByEmail(email)).thenReturn(Mono.just(existingUser));

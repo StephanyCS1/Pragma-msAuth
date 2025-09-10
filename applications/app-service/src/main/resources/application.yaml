@@ -1,5 +1,5 @@
 server:
-  port: 9001
+  port: 8080
 spring:
   application:
     name: "autenticacion"
@@ -7,15 +7,16 @@ spring:
     add-properties: false
   profiles:
     include: null
-
 adapters:
   r2dbc:
-    host: localhost
-    port: 5432
-    database: crediya
+    host: ${POSTGRES_HOST:db-postgres}
+    port: ${POSTGRES_PORT:5432}
+    database: ${POSTGRES_DB:solicitudes}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     schema: public
-    username: postgres
-    password: tefis123
+    ssl: false
+
 management:
   endpoints:
     web:
@@ -53,7 +54,7 @@ security:
     issuer: "crediya-auth"
     audience: "crediya-services"
     secret: "${JWT_SECRET}" # HS256
-    expiration-minutes: 3
+    expiration-minutes: 30
 
 logging:
   level:

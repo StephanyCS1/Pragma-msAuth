@@ -1,28 +1,29 @@
 package co.com.crediya.config;
 
+import co.com.crediya.model.user.gateways.UserRepository;
+import co.com.crediya.usecase.createuser.CreateUserUseCase;
+import co.com.crediya.usecase.deleteuser.DeleteUserUseCase;
+import co.com.crediya.usecase.getuserbyid.GetUserQueryUseCase;
+import co.com.crediya.usecase.updateuser.UpdateUserUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.mock;
 
 public class UseCasesConfigTest {
 
     @Test
     void testUseCaseBeansExist() {
         try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(TestConfig.class)) {
-            String[] beanNames = context.getBeanDefinitionNames();
+            assertNotNull(context.getBean(CreateUserUseCase.class));
+            assertNotNull(context.getBean(DeleteUserUseCase.class));
+            assertNotNull(context.getBean(GetUserQueryUseCase.class));
+            assertNotNull(context.getBean(UpdateUserUseCase.class));
 
-            boolean useCaseBeanFound = false;
-            for (String beanName : beanNames) {
-                if (beanName.endsWith("UseCase")) {
-                    useCaseBeanFound = true;
-                    break;
-                }
-            }
-
-            assertTrue(useCaseBeanFound, "No beans ending with 'Use Case' were found");
         }
     }
 
@@ -31,14 +32,8 @@ public class UseCasesConfigTest {
     static class TestConfig {
 
         @Bean
-        public MyUseCase myUseCase() {
-            return new MyUseCase();
-        }
-    }
-
-    static class MyUseCase {
-        public String execute() {
-            return "MyUseCase Test";
+        public UserRepository userRepository() {
+            return mock(UserRepository.class);
         }
     }
 }

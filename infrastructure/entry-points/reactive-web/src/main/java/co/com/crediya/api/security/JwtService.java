@@ -32,12 +32,15 @@ public class JwtService {
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(props.expirationMinutes() * 60L);
         Optional<RolName> rolName = RolName.fromId(user.getRol());
+        if (rolName.isEmpty()) {
+            throw new IllegalArgumentException("Rol inválido: " + user.getRol());
+        }
         Map<String, Object> claims = new HashMap<>();
-        claims.put("uid", user.getId());
+        claims.put("uid", user.getId().toString());
         claims.put("name", user.getName());
         claims.put("lastName", user.getLastName());
-        claims.put("email", user.getEmail());
-        claims.put("baseSalary", user.getBaseSalary() != null ? user.getBaseSalary() : null);
+        claims.put("email", user.getEmail().value());
+        claims.put("baseSalary", user.getBaseSalary().amount() != null ? user.getBaseSalary().amount() : null);
         claims.put("identification", user.getIdentification());
         claims.put("rol", rolName.get().name());
 

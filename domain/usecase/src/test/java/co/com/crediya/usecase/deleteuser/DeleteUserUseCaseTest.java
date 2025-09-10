@@ -3,6 +3,7 @@ package co.com.crediya.usecase.deleteuser;
 
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.exceptions.DomainValidationException;
+import co.com.crediya.model.user.exceptions.UserNotFoundException;
 import co.com.crediya.model.user.gateways.UserRepository;
 import co.com.crediya.model.user.valueobjects.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
+import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -41,7 +43,8 @@ class DeleteUserUseCaseTest {
                 new Birthday(LocalDate.of(1990, 5, 15)),
                 "Calle 123 #45-67",
                 new Email("juan.perez@example.com"),
-                new Salary(new BigDecimal("3000000"))
+                new Salary(new BigDecimal("3000000")),
+                "123456789"
         );
     }
 
@@ -67,7 +70,7 @@ class DeleteUserUseCaseTest {
 
         // When & Then
         StepVerifier.create(deleteUserUseCase.deleteUser(email))
-                .expectError(DomainValidationException.class)
+                .expectError(UserNotFoundException.class)
                 .verify();
     }
 }

@@ -23,6 +23,7 @@ class UserTest {
     private String address;
     private Email email;
     private Salary baseSalary;
+    private String identification;
 
     @BeforeEach
     void setUp() {
@@ -38,7 +39,7 @@ class UserTest {
     @Test
     @DisplayName("shouldCreateUserWhenValidParametersProvided")
     void shouldCreateUserWhenValidParametersProvided() {
-        User user = User.create(userId, name, lastName, birthday, address, email, baseSalary);
+        User user = User.create(userId, name, lastName, birthday, address, email, baseSalary, identification);
         assertThat(user).isNotNull();
         assertThat(user.getId()).isEqualTo(userId);
         assertThat(user.getName()).isEqualTo(name);
@@ -47,17 +48,18 @@ class UserTest {
         assertThat(user.getAddress()).isEqualTo(address);
         assertThat(user.getEmail()).isEqualTo(email);
         assertThat(user.getBaseSalary()).isEqualTo(baseSalary);
+        assertThat(user.getIdentification()).isEqualTo(identification);
     }
 
     @Test
     @DisplayName("shouldCreateUserCopyWithNewAddressEmailSalary")
     void shouldCreateUserCopyWithNewAddressEmailSalary() {
         // Given
-        User originalUser = User.create(userId, name, lastName, birthday, address, email, baseSalary);
+        User originalUser = User.create(userId, name, lastName, birthday, address, email, baseSalary, identification);
         String newAddress = "Nueva Calle 456 #78-90";
         Email newEmail = new Email("nuevo.email@example.com");
         Salary newSalary = new Salary(new BigDecimal("4000000"));
-        User updatedUser = originalUser.withAddressEmailSalary(newAddress, newEmail, newSalary);
+        User updatedUser = originalUser.withAddressEmailSalary(newAddress, newEmail, newSalary, identification);
         assertThat(updatedUser).isNotNull();
         assertThat(updatedUser.getId()).isEqualTo(originalUser.getId());
         assertThat(updatedUser.getName()).isEqualTo(originalUser.getName());
@@ -97,7 +99,7 @@ class UserTest {
     @Test
     @DisplayName("shouldModifyUserUsingToBuilder")
     void shouldModifyUserUsingToBuilder() {
-        User originalUser = User.create(userId, name, lastName, birthday, address, email, baseSalary);
+        User originalUser = User.create(userId, name, lastName, birthday, address, email, baseSalary, identification);
         String newName = "Carlos";
         User modifiedUser = originalUser.toBuilder()
                 .name(newName)

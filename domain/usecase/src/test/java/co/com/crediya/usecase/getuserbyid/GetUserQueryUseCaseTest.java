@@ -2,6 +2,7 @@ package co.com.crediya.usecase.getuserbyid;
 
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.exceptions.DomainValidationException;
+import co.com.crediya.model.user.exceptions.UserNotFoundException;
 import co.com.crediya.model.user.gateways.UserRepository;
 import co.com.crediya.model.user.valueobjects.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +42,9 @@ class GetUserQueryUseCaseTest {
                 new Birthday(LocalDate.of(1990, 5, 15)),
                 "Calle 123 #45-67",
                 new Email("juan.perez@example.com"),
-                new Salary(new BigDecimal("3000000"))
+                new Salary(new BigDecimal("3000000")),
+                "123456789"
+
         );
     }
 
@@ -67,7 +70,7 @@ class GetUserQueryUseCaseTest {
 
         // When & Then
         StepVerifier.create(getUserQueryUseCase.findUserByEmail(email))
-                .expectError(DomainValidationException.class)
+                .expectError(UserNotFoundException.class)
                 .verify();
     }
 
