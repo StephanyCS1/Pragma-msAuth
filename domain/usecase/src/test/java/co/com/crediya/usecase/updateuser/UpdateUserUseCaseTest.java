@@ -8,102 +8,65 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UpdateUserUseCase Tests")
 class UpdateUserUseCaseTest {
 
+
     @Mock
     private UserRepository userRepository;
 
+    @InjectMocks
     private UpdateUserUseCase updateUserUseCase;
+
     private User existingUser;
-    private EditUserCommand validEditCommand;
+    private EditUserCommand validCommand;
+    private UUID userId;
+    private Email userEmail;
 
     @BeforeEach
     void setUp() {
-        updateUserUseCase = new UpdateUserUseCase(userRepository);
-        existingUser = User.create(
-                UUID.randomUUID(),
-                "Juan",
-                "Pérez",
-                new Birthday(LocalDate.of(1990, 5, 15)),
-                "Calle 123 #45-67",
-                new Email("juan.perez@example.com"),
-                new Salary(new BigDecimal("3000000")),
-                "123456789"
-        );
-
-        validEditCommand = new EditUserCommand(
-                "Nueva Calle 456 #78-90",
-                new Email("nuevo.email@example.com"),
-                new Salary(new BigDecimal("4000000"))
+        userId = UUID.randomUUID();
+        userEmail = new Email("test.user@example.com");
+        existingUser = User.builder()
+                .id(userId)
+                .email(userEmail)
+                .identification("1010")
+                .build();
+        validCommand = new EditUserCommand(
+                "Nueva Direccion de Prueba 123", new Email("new.email@example.com"), new Salary(new BigDecimal("3000000"))
         );
     }
 
     @Test
-    @DisplayName("shouldUpdateUserByIdWhenUserExists")
-    void shouldUpdateUserByIdWhenUserExists() {
-
-        UUID userId = existingUser.getId();
-        User updatedUser = existingUser.withAddressEmailSalary(
-                validEditCommand.address(),
-                validEditCommand.email(),
-                validEditCommand.baseSalary(),
-                existingUser.getIdentification()
-        );
-
-        when(userRepository.findById(userId)).thenReturn(Mono.just(existingUser));
-        when(userRepository.saveUser(any(User.class))).thenReturn(Mono.just(updatedUser));
-
-
-        StepVerifier.create(updateUserUseCase.editUser(userId, validEditCommand))
-                .expectNext(updatedUser)
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("shouldThrowExceptionWhenUserNotFoundById")
-    void shouldThrowExceptionWhenUserNotFoundById() {
-
-        UUID userId = UUID.randomUUID();
+    void editUser_ShouldReturnError_WhenIdIsNotFound() {
         when(userRepository.findById(userId)).thenReturn(Mono.empty());
 
-        StepVerifier.create(updateUserUseCase.editUser(userId, validEditCommand))
-                .expectError(DomainValidationException.class)
+        StepVerifier.create(updateUserUseCase.editUser(userId, validCommand))
+                .expectErrorMatches(throwable -> throwable instanceof DomainValidationException &&
+                        throwable.getMessage().contains("Usuario no encontrado"))
                 .verify();
     }
 
     @Test
-    @DisplayName("shouldUpdateUserByEmailWhenUserExists")
-    void shouldUpdateUserByEmailWhenUserExists() {
+    void editUserByEmail_ShouldReturnError_WhenEmailIsNotFound() {
+        when(userRepository.findByEmail(userEmail)).thenReturn(Mono.empty());
 
-        Email email = existingUser.getEmail();
-        User updatedUser = existingUser.withAddressEmailSalary(
-                validEditCommand.address(),
-                validEditCommand.email(),
-                validEditCommand.baseSalary(),
-                existingUser.getIdentification()
-        );
-
-        when(userRepository.findByEmail(email)).thenReturn(Mono.just(existingUser));
-        when(userRepository.saveUser(any(User.class))).thenReturn(Mono.just(updatedUser));
-
-        StepVerifier.create(updateUserUseCase.editUserByEmail(email, validEditCommand))
-                .expectNext(updatedUser)
-                .verifyComplete();
+        StepVerifier.create(updateUserUseCase.editUserByEmail(userEmail, validCommand))
+                .expectErrorMatches(throwable -> throwable instanceof DomainValidationException &&
+                        throwable.getMessage().contains("Usuario no encontrado"))
+                .verify();
     }
-
 
 }

@@ -2,12 +2,16 @@ package co.com.crediya.usecase.createuser;
 
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.exceptions.DomainValidationException;
+import co.com.crediya.model.user.gateways.PasswordEncodePort;
 import co.com.crediya.model.user.gateways.UserRepository;
-import co.com.crediya.model.user.valueobjects.*;
+import co.com.crediya.model.user.valueobjects.Birthday;
+import co.com.crediya.model.user.valueobjects.CreateUserCommand;
+import co.com.crediya.model.user.valueobjects.Email;
+import co.com.crediya.model.user.valueobjects.Salary;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
@@ -15,59 +19,62 @@ import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("CreateUserUseCase Tests")
 class CreateUserUseCaseTest {
 
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PasswordEncodePort passwordEncoder;
+
+    @InjectMocks
     private CreateUserUseCase createUserUseCase;
+
     private CreateUserCommand validCommand;
+    private User user;
 
     @BeforeEach
     void setUp() {
-        createUserUseCase = new CreateUserUseCase(userRepository);
         validCommand = new CreateUserCommand(
-                "Juan",
-                "Pérez",
-                "Calle 123 #45-67",
-                new Birthday(LocalDate.of(1990, 5, 15)),
+                "Juan", "Perez", "Calle 100 # 50-20, Bogota",
+                new Birthday(LocalDate.now().minusYears(30)),
                 new Email("juan.perez@example.com"),
-                new Salary(new BigDecimal("3000000")),
-                "123456789"
+                new Salary(new BigDecimal("2000000")),
+                "10101010", "password123", "CLIENT"
         );
+        user = User.builder().id(UUID.randomUUID()).email(new Email("juan.perez@example.com")).build();
     }
 
     @Test
-    @DisplayName("shouldCreateUserWhenValidCommandAndEmailNotExists")
-    void shouldCreateUserWhenValidCommandAndEmailNotExists() {
-        User expectedUser = User.create(null, "Juan", "Pérez",
-                new Birthday(LocalDate.of(1990, 5, 15)),
-                "Calle 123 #45-67",
-                new Email("juan.perez@example.com"),
-                new Salary(new BigDecimal("3000000")), "123456789");
-
-        when(userRepository.existsByEmail(eq(validCommand.email()))).thenReturn(Mono.just(false));
-        when(userRepository.saveUser(any(User.class))).thenReturn(Mono.just(expectedUser));
+    void createUser_ShouldReturnError_WhenUserEmailAlreadyExists() {
+        when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(true));
 
         StepVerifier.create(createUserUseCase.createUser(validCommand))
-                .expectNext(expectedUser)
-                .verifyComplete();
+                .expectErrorMatches(throwable -> throwable instanceof DomainValidationException &&
+                        throwable.getMessage().contains("El email ya está registrado"))
+                .verify();
     }
 
     @Test
-    @DisplayName("shouldThrowExceptionWhenEmailAlreadyExists")
-    void shouldThrowExceptionWhenEmailAlreadyExists() {
-        when(userRepository.existsByEmail(eq(validCommand.email()))).thenReturn(Mono.just(true));
+    void createUser_ShouldReturnError_WhenRolIsInvalid() {
+        CreateUserCommand invalidCommand = new CreateUserCommand(
+                "Juan", "Perez", "Calle 100 # 50-20, Bogota",
+                new Birthday(LocalDate.now().minusYears(30)),
+                new Email("test@example.com"),
+                new Salary(new BigDecimal("2000000")),
+                "10101010", "password123", "INVALID_ROL"
+        );
 
-        StepVerifier.create(createUserUseCase.createUser(validCommand))
-                .expectError(DomainValidationException.class)
+        when(userRepository.existsByEmail(any(Email.class))).thenReturn(Mono.just(false));
+
+        StepVerifier.create(createUserUseCase.createUser(invalidCommand))
+                .expectErrorMatches(throwable -> throwable instanceof DomainValidationException &&
+                        throwable.getMessage().contains("Rol inválido"))
                 .verify();
     }
 }

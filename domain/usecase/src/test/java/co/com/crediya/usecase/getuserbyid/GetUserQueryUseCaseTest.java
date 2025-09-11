@@ -9,15 +9,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.UUID;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -29,72 +27,58 @@ class GetUserQueryUseCaseTest {
     @Mock
     private UserRepository userRepository;
 
+    @InjectMocks
     private GetUserQueryUseCase getUserQueryUseCase;
-    private User existingUser;
+
+    private User user;
+    private Email userEmail;
 
     @BeforeEach
     void setUp() {
-        getUserQueryUseCase = new GetUserQueryUseCase(userRepository);
-        existingUser = User.create(
-                UUID.randomUUID(),
-                "Juan",
-                "Pérez",
-                new Birthday(LocalDate.of(1990, 5, 15)),
-                "Calle 123 #45-67",
-                new Email("juan.perez@example.com"),
-                new Salary(new BigDecimal("3000000")),
-                "123456789"
-
-        );
+        userEmail = new Email("test.user@example.com");
+        user = User.builder().email(userEmail).build();
     }
 
     @Test
     @DisplayName("shouldReturnUserWhenEmailExists")
-    void shouldReturnUserWhenEmailExists() {
-        // Given
-        String email = "juan.perez@example.com";
-        when(userRepository.findByEmail(any(Email.class))).thenReturn(Mono.just(existingUser));
+    void findUserByEmail_ShouldSucceed() {
+        when(userRepository.findByEmail(any(Email.class))).thenReturn(Mono.just(user));
 
-        // When & Then
-        StepVerifier.create(getUserQueryUseCase.findUserByEmail(email))
-                .expectNext(existingUser)
+        StepVerifier.create(getUserQueryUseCase.findUserByEmail(userEmail.value()))
+                .expectNext(user)
                 .verifyComplete();
     }
 
     @Test
     @DisplayName("shouldThrowExceptionWhenEmailNotExists")
-    void shouldThrowExceptionWhenEmailNotExists() {
-        // Given
-        String email = "nonexistent@example.com";
+    void findUserByEmail_ShouldReturnError_WhenUserDoesNotExist() {
         when(userRepository.findByEmail(any(Email.class))).thenReturn(Mono.empty());
 
-        // When & Then
-        StepVerifier.create(getUserQueryUseCase.findUserByEmail(email))
-                .expectError(UserNotFoundException.class)
+        StepVerifier.create(getUserQueryUseCase.findUserByEmail(userEmail.value()))
+                .expectErrorMatches(throwable -> throwable instanceof UserNotFoundException &&
+                        throwable.getMessage().contains("El email no existe."))
                 .verify();
     }
 
     @Test
     @DisplayName("shouldReturnAllUsersWhenUsersExist")
-    void shouldReturnAllUsersWhenUsersExist() {
-        // Given
-        when(userRepository.findAll()).thenReturn(Flux.just(existingUser));
+    void findAllUsers_ShouldSucceed() {
+        List<User> userList = List.of(user, new User());
+        when(userRepository.findAll()).thenReturn(Flux.fromIterable(userList));
 
-        // When & Then
         StepVerifier.create(getUserQueryUseCase.findAllUsers())
-                .expectNext(existingUser)
+                .expectNextCount(2)
                 .verifyComplete();
     }
 
     @Test
     @DisplayName("shouldThrowExceptionWhenNoUsersExist")
-    void shouldThrowExceptionWhenNoUsersExist() {
-        // Given
+    void findAllUsers_ShouldReturnError_WhenNoUsersExist() {
         when(userRepository.findAll()).thenReturn(Flux.empty());
 
-        // When & Then
         StepVerifier.create(getUserQueryUseCase.findAllUsers())
-                .expectError(DomainValidationException.class)
+                .expectErrorMatches(throwable -> throwable instanceof DomainValidationException &&
+                        throwable.getMessage().contains("No hay registros."))
                 .verify();
     }
 }

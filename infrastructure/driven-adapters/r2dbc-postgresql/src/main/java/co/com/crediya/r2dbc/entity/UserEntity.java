@@ -1,7 +1,5 @@
 package co.com.crediya.r2dbc.entity;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -47,7 +45,4 @@ public class UserEntity {
 
     @Column("rol")
     private UUID rol;
-
-
-
 }
